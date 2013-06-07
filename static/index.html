@@ -201,6 +201,9 @@
 	<script type="text/javascript" src="js/bootstrap.min.js"></script>
 	<script type="text/javascript" src="js/jquery.validate.min.js"></script>
     <script type="text/javascript" src="js/additional-methods.min.js"></script>
+    <script type="text/javascript" src="employees.js"></script>
+	<script type="text/javascript" src="locations.js"></script>
+	<script type="text/javascript" src="messages.js"></script>
 	
 	<script type="text/template" id="employee_row">
 		<tr> 
@@ -208,7 +211,7 @@
 			<td><%= data.employee_id %></td> 
 			<td><a href="#" rel="empname" id="<%= data.employee_id %>"><%= data.name %></a></td> 
 			<td><%= data.hire_date %></td> 
-			<td><% $.each(loc_list, function(i, loc) {
+			<td><% $.each(loc_list.locations, function(i, loc) {
 				if (loc.location_id == data.location) print (loc.city_name);
 			}); %></td> 
 			<td><% print((data.consultant) ? "Yes" : "No") %></td> 
@@ -236,7 +239,8 @@
 		<p><%= data.content %></p>
 		<p><strong><%= data.date %></strong></p></div>
 	</script>
-
+	
+	
 	<script type="text/javascript">
 		// validate signup form on keyup and submit
 	var form_val = $("#user_form").validate({
@@ -279,15 +283,10 @@
 			}
 		}
 	});
-	var user_id = 1, curr_emp_id = -1, btn_mode = "add",
+	var curr_emp_id = -1, btn_mode = "add",
 	waitLoad = '<div id="waitload" class="well center"><img src="images/ajax-loader.gif" width="28" height="28" border="0" align="absmiddle" /><br />Operation in progress. Please wait...</div>',
-	loc_list = [],
-	message_list = [],
-	employeeData = [],
-	messages_url = 'messages',
 	note_url = 'notes',
-	users_url = 'employees',
-	locations_url = 'locations';
+	users_url = 'employees';
 						
 	$(document).ready(function() { 
 		$(".tablesorter").tablesorter();
@@ -328,20 +327,19 @@
 				var e = getEmployeeData(curr_emp_id),
 				new_note = { "date": getCurrentDateStr(), "content": $('#new_note').val() };
 				// AJAX
-				var error = true;
+				/*var error = true;
 				$.ajaxPOST(note_url, JSON.stringify(new_note))
-					.done(function(data) { 
-						if (e.notes)
-							e.notes[e.notes.length] = new_note;
-						else
-							e.notes = [ new_note ];
-						showEmployeeData(e.notes, "notes_box", 'notes_row');
-						$('#new_note').val("");
-					})
-					.fail(function() { 
-						showMessage("error","An error occurred adding the note");
-						$('#new_note').val("");						
-					});				
+					.done(function(data) { showMessage("success","Note added successfully"); })
+					.fail(function() { showMessage("error","An error occurred adding the note"); });
+				*/
+				// In Browser - comment for live server
+				showMessage("success","Note added successfully");
+				if (e.notes)
+					e.notes[e.notes.length] = new_note;
+				else
+					e.notes = [ new_note ];
+				showEmployeeData(e.notes, "notes_box", 'notes_row');
+				$('#new_note').val("");
 			} else {
 				showMessage("error","Note content is required.");
 			}
@@ -357,14 +355,32 @@
 				new_e.location =  $("#location").val();
 				new_e.consultant = ($("input[name=consultant]:checked","#user_form").val() == "Y");
                 new_e.type = btn_mode;
-				var error = false;
+				/* In Browser - comment out when using a live server
+				if (btn_mode == "add") {
+					employeeData.employees[employeeData.employees.length] = new_e;
+				} else {
+					var old_e = getEmployeeData(new_e.employee_id);
+					old_e.name =  new_e.name;
+					old_e.hire_date =  new_e.hire_date;
+					old_e.location =  new_e.location;
+					old_e.consultant =  new_e.consultant;
+				}
+				loadEmployees();*/
+				/* End In Browser code */
+				// AJAX
+				var method = "POST";
+				//if (btn_mode == "edit") {
+				//	method = "PUT";
+				//}
+
+				var error = true;
 				$.ajax({
 					type: "POST",
-					url: users_url+"/save",
+					url: users_url+"/"+btn_mode,
 					dataType: "json",
 					data: { items: JSON.stringify(new_e) }
 				}).done(function(data) { loadEmployees(); })
-				.fail(function() { showMessage("error","An error occured saving the employee data."); });
+				.fail(function() { console.log("Operation failed"); });
 
 				$("#new_user_modal").modal('hide');
 				// SAVE DATA
@@ -372,14 +388,13 @@
 					showMessage("error","An error occured.");
 				} else {
 					// RELOAD DATA
-					loadEmployees();
 				}
 			} else {
 				form_val.showErrors();
 			}
 		});
 		loadLocations();
-		loadEmployees();
+		displayEmployeeData();
    	});
 	function getCurrentDateStr() {
 		var d = new Date();
@@ -391,12 +406,7 @@
 		$('#new_user_modal input:checked').attr('checked', false);
 	}
 	function loadLocations() {
-		$.getJSON(locations_url)
-		.done(function(data) { loc_list = data.result.items; showLocations(); })
-		.fail(function() { showMessage("error","Could not load location list."); });
-	}
-	function showLocations() {
-		$.each(loc_list, function(key, value) {   
+		$.each(loc_list.locations, function(key, value) {   
 			$('#location')
 				.append($("<option></option>")
 				.attr("value",value.location_id)
@@ -404,16 +414,17 @@
 		});
 	}
 	function loadMessages() {
-		
-		$.getJSON(messages_url+"/loadmessages/"+user_id)
-		.done(function(data) { message_list = data.result.items; showMessages(message_list); })
+		/*
+		$.getJSON(messages_url+"/user_id="+curr_emp_id)
+		.done(function(data) { message_list = data; showMessages(data); })
 		.fail(function() { showMessage("error","Could not load messages."); });
-		//showMessages(message_list);
+		*/
+		showMessages(message_list);
 	}
 	function showMessages(mess_list) {
 		$('#message_table').empty();
 		var template = _.template($('#message_row').html()), htmlOut = '';
-		$.each(mess_list, function (i, eData) {
+		$.each(mess_list.messages, function (i, eData) {
 			htmlOut += template({data:eData});
 		});
 		$('#message_table').html(htmlOut);
@@ -422,7 +433,7 @@
 		$('input[rel=message_link]').on("click",function(e) {
 			e.preventDefault();
 			var mess_id = this.id;
-			$.each(message_list, function (i, eData) {
+			$.each(message_list.messages, function (i, eData) {
 				if (parseInt(eData.message_id) == parseInt(mess_id)) {
 					$("#message_header").html('<h4 class="tabs_involved">'+eData.subject+'</h4>');
 					$("#message_body").html(eData.message);
@@ -433,15 +444,11 @@
 	}
 	function loadEmployees()
     {
-		$("#employee_table").empty();
-		$("#employee_table").html('<tr><td colspan="7" class="empty_table">'+waitLoad+'</td></tr>');
-		
-		$.getJSON(users_url)
-         .done(function(data) { employeeData = data.result.items; displayEmployeeData(); })
+         $.getJSON(users_url)
+         .done(function(data) { employeeData = data; displayEmployeeData(); })
          .fail(function() { showMessage("error","Could not load messages."); });
 	}
 	function displayEmployeeData() {
-		
 		// RESET DISPLAY CONTAINERS
 		curr_emp_id = -1;
 		$("#employee_table").empty();
@@ -452,56 +459,68 @@
 		$("#employee_table").html('<tr><td colspan="7" class="empty_table">'+waitLoad+'</td></tr>');
 		
 		// LOAD DATA
-		var template = _.template($('#employee_row').html()), htmlOut = '';
-		$.each(employeeData, function (i, eData) {
-			htmlOut += template({data:eData});
-		});
-		$('#employee_table').html(htmlOut);
-		$('input[rel="edit_user"]').on("click",function(e) {
-			var e = getEmployeeData(this.id);
-			if (e != null) {
-				$("#employee_id").val(e.employee_id);
-				$("#employee_id").attr("disabled", true);
-				$("#name").val(e.name);
-				$("#location").val(e.location);
-				$("#hire_date").val(e.hire_date);
-				(e.consultant) ? $('#consultanty').attr("checked",true) : $('#consultantn').attr("checked",true);
-				form_val.resetForm( );
-				btn_mode = "edit";
-				$('#user_modal_head').html("Edit User");
-			} else {
-				showMessage("error","An error occured selecting thsi user for editing.");
-			}
-			$("#new_user_modal").modal('show');
-		});
-		$('input[rel="delete_user"]').on("click",function(e) {
-			e.preventDefault();
-			if (confirm("Are you sure you want to delete this user?"))
-				deleteUser(this.id);
-		});
-		$('a[rel="empname"]').on("click",function(e) {
-			e.preventDefault();
-			var e = getEmployeeData(this.id);
-			if (e != null) {
-				curr_emp_id = this.id;
-				showEmployeeData(e.reviews, "review_table", 'review_row');
-				showEmployeeData(e.notes, "notes_box", 'notes_row');
-			}
-		});
+		htmlOut = "";
+		var to = setInterval(function() {
+			var template = _.template($('#employee_row').html()), htmlOut = '';
+			$.each(employeeData.employees, function (i, eData) {
+				htmlOut += template({data:eData});
+			});
+			$('#employee_table').html(htmlOut);
+			$('input[rel="edit_user"]').on("click",function(e) {
+				var e = getEmployeeData(this.id);
+				if (e != null) {
+					$("#employee_id").val(e.employee_id);
+					$("#employee_id").attr("disabled", true);
+					$("#name").val(e.name);
+					$("#location").val(e.location);
+					$("#hire_date").val(e.hire_date);
+					(e.consultant) ? $('#consultanty').attr("checked",true) : $('#consultantn').attr("checked",true);
+					form_val.resetForm( );
+					btn_mode = "edit";
+					$('#user_modal_head').html("Edit User");
+				} else {
+					showMessage("error","An error occured selecting thsi user for editing.");
+				}
+				$("#new_user_modal").modal('show');
+			});
+			$('input[rel="delete_user"]').on("click",function(e) {
+				e.preventDefault();
+				if (confirm("Are you sure you want to delete this user?"))
+					deleteUser(this.id);
+			});
+			$('a[rel="empname"]').on("click",function(e) {
+				e.preventDefault();
+				var e = getEmployeeData(this.id);
+				if (e != null) {
+					curr_emp_id = this.id;
+					showEmployeeData(e.reviews, "review_table", 'review_row');
+					showEmployeeData(e.notes, "notes_box", 'notes_row');
+				}
+			});
+		}, 3000);
 	}
 	function deleteUser(user_id) {
 		var e = getEmployeeData(user_id);
 		if (e != null) {
+			new_emp_arr = [];
+			$.each(employeeData.employees, function (i, emp) {
+				if (parseInt(emp.employee_id) != parseInt(user_id))
+					new_emp_arr[new_emp_arr.length] = emp;
+			});
 			// AJAX
-			var error = true;
-			$.ajaxGET(user_url+"/delete/"+e.employee_id)
-				.done(function(data) { 
-					showMessage("success","Employee " + e.name + " was successfully deleted."); 
-					loadEmployees();
-				})
-				.fail(function() { showMessage("error","An error occurred deleting employee " + e.name); });
-		} else {
-			showMessage("error","Selected employee was not found.");
+			/*var error = true;
+			$.ajax({
+				url: user_url, 
+				data: JSON.stringify(new_note),
+				type: "DELETE",
+				dataType: "json"})
+				.done(function(data) { showMessage("success","User " + e.name + " successfully deleted."); })
+				.fail(function() { showMessage("error","An error occurred deleting user " + e.name); });
+			*/
+			// In Browser - comment for live server
+			employeeData.employees = new_emp_arr;
+			loadEmployees();
+			showMessage("success","User " + e.name + " successfully deleted.");
 		}
 	}
 	function showMessage(type, message, duration) {
@@ -517,7 +536,7 @@
 	}
 	function getEmployeeData(emp_id) {
 		var emp = null;
-		$.each(employeeData, function (i, eData) {
+		$.each(employeeData.employees, function (i, eData) {
 			if (eData.employee_id == emp_id)
 				emp = eData;
 		});

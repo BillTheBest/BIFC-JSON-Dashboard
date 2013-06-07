@@ -32,18 +32,18 @@ class Employees extends CI_Controller {
                 'consultant'            => (isset($items->consultant) && $items->consultant == true ? 'Y' : 'N')
             );
 			$type = isset($items->type) ? $items->type : "add";
-			$employee_id = isset($items->employee_id) ? $items->employee_id : -1;
-            $error = !$this->employees_model->save($type, $data, $employee_id);
+			$employee_id = isset($items->employee_id) ? intval($items->employee_id) : -1;
+            $this->employees_model->save($type, $data, $employee_id);
         }
         else
         {
          $error = true;
             $status = "Employee Data was missing.";
         }
-        if (!$error)
+        if (!empty($this->employees_model->error) || isset($status))
         {
             $json_out['code'] = 301;
-            $json_out['status'] = "error:".(!empty($this->employees_model->error) ? $this->employees_model->error : "Error");
+            $json_out['status'] = "error:".(!empty($this->employees_model->error) ? $this->employees_model->error : $status);
             $json_out['result'] = 'An error occurred.';
         }
         $this->output->set_header('Content-type: application/json');
@@ -70,6 +70,34 @@ class Employees extends CI_Controller {
         {
             $json_out['code'] = 301;
             $json_out['status'] = "error:".$status;
+            $json_out['result'] = 'An error occurred.';
+        }
+        $this->output->set_header('Content-type: application/json');
+        $this->output->set_output(json_encode($json_out));
+    }
+
+    public function add_note()
+    {
+        $error = false;
+        $json_out = array("result"=>array(),"code"=>200,"status"=>"OK");
+
+        if ($this->input->post('items'))
+        {
+            $items = json_decode($this->input->post('items'));
+                $data = array('content'		    => $items->content,
+                              'employee_id'		=> $items->employee_id
+            );
+            $json_out['result']['items'] = $this->employees_model->add_note($data);
+        }
+        else
+        {
+            $error = true;
+            $status = "Note Data was missing.";
+        }
+        if (!empty($this->employees_model->error) || isset($status))
+        {
+            $json_out['code'] = 301;
+            $json_out['status'] = "error:".(!empty($this->employees_model->error) ? $this->employees_model->error : $status);
             $json_out['result'] = 'An error occurred.';
         }
         $this->output->set_header('Content-type: application/json');
