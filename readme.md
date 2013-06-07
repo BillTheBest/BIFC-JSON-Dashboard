@@ -16,7 +16,7 @@ Web Server Running:
 To Install:
 
 - Copy the contents of the _live_ folder to the __root__ of your web server.
-- Modify the file _/live/application/config/database.php_ to match your database settings.
+- Move and rename the file _/live/data/database_install.php_ to _/live/application/config/database.php_ and update the settings to match your database settings.
 - In PhpMyAdmin, import the _/live/data/bifc_json_dash.sql_ data
 - Browse to your local web address to run the demo
 
