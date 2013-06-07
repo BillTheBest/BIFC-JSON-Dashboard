@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 3.5.2
+-- version 3.4.9
 -- http://www.phpmyadmin.net
 --
--- Host: internal-db.s70824.gridserver.com
--- Generation Time: Jun 06, 2013 at 07:51 PM
--- Server version: 5.1.55-rel12.6
--- PHP Version: 5.3.23
+-- Host: localhost
+-- Generation Time: Jun 07, 2013 at 04:13 AM
+-- Server version: 5.5.20
+-- PHP Version: 5.3.9
 
 SET SQL_MODE="NO_AUTO_VALUE_ON_ZERO";
 SET time_zone = "+00:00";
@@ -17,7 +17,7 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8 */;
 
 --
--- Database: `db70824_bifc_json_dash`
+-- Database: `bifc_json_dash`
 --
 
 -- --------------------------------------------------------
@@ -40,10 +40,10 @@ CREATE TABLE IF NOT EXISTS `employees` (
 --
 
 INSERT INTO `employees` (`employee_id`, `name`, `location`, `hire_date`, `consultant`) VALUES
-(1, 'Jeff Fox', '1', '6/20/2008', 'N'),
+(1, 'Jeff Fox', '2', '6/20/2012', 'Y'),
 (2, 'Zishan Ahmad', '1', '5/19/2012', 'N'),
-(3, 'Alex Bachuk', '2', '5/30/2013', 'Y'),
-(4, 'Anthony Cintron', '2', '5/2/2011', 'N');
+(3, 'Alex Bachuk', '3', '5/30/2013', 'Y'),
+(4, 'Anthony Cintron', '3', '5/2/2011', 'N');
 
 -- --------------------------------------------------------
 
@@ -120,7 +120,17 @@ CREATE TABLE IF NOT EXISTS `reviews` (
   `status` varchar(100) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
   `notes` varchar(500) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=5 ;
+
+--
+-- Dumping data for table `reviews`
+--
+
+INSERT INTO `reviews` (`id`, `employee_id`, `date`, `reviewed_by`, `status`, `notes`) VALUES
+(1, 1, '2012-07-01 00:00:00', 'Zishan Ahmad', 'Make this guy the CEO!!!', ''),
+(2, 1, '2011-07-01 00:00:00', 'Alex Bachuk', 'Outstanding', ''),
+(3, 1, '2010-07-01 00:00:00', 'Anthony Cintron', 'Also Good', ''),
+(4, 1, '2009-07-01 00:00:00', 'Anthony Cintron', 'Great!', 'Funny how the padawan has become the master!');
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
