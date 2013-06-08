@@ -14,6 +14,12 @@ class Employees extends CI_Controller {
 
         $json_out['result']['items'] = $this->employees_model->find_all();
 
+        if (!empty($this->employees_model->error))
+        {
+            $json_out['code'] = 301;
+            $json_out['status'] = "error:".$this->employees_model->error;
+            $json_out['result'] = 'An error occurred.';
+        }
         $this->output->set_header('Content-type: application/json');
         $this->output->set_output(json_encode($json_out));
     }
@@ -59,17 +65,16 @@ class Employees extends CI_Controller {
 		
 		if (isset($employee_id) && !empty($employee_id))
         {
-            $error = !$this->employees_model->delete($employee_id);
+            $this->employees_model->delete($employee_id);
         }
         else
         {
-            $error = true;
-            $status = "Employee ID was missing.";
+            $status = "Employee ID was missing. Could not delete employee.";
         }
-        if (!$error)
+        if (!empty($this->employees_model->error) || isset($status))
         {
             $json_out['code'] = 301;
-            $json_out['status'] = "error:".$status;
+            $json_out['status'] = "error:".(!empty($this->employees_model->error) ? $this->employees_model->error : $status);
             $json_out['result'] = 'An error occurred.';
         }
         $this->output->set_header('Content-type: application/json');
@@ -93,6 +98,34 @@ class Employees extends CI_Controller {
         {
             $error = true;
             $status = "Note Data was missing.";
+        }
+        if (!empty($this->employees_model->error) || isset($status))
+        {
+            $json_out['code'] = 301;
+            $json_out['status'] = "error:".(!empty($this->employees_model->error) ? $this->employees_model->error : $status);
+            $json_out['result'] = 'An error occurred.';
+        }
+        $this->output->set_header('Content-type: application/json');
+        $this->output->set_output(json_encode($json_out));
+    }
+    public function add_review()
+    {
+        $error = false;
+        $json_out = array("result"=>array(),"code"=>200,"status"=>"OK");
+
+        if ($this->input->post('items'))
+        {
+            $items = json_decode($this->input->post('items'));
+                $data = array('reviewed_by'		    => $items->content,
+                              'status'				=> $items->status,
+                              'employee_id'			=> $items->employee_id
+            );
+            $json_out['result']['items'] = $this->employees_model->add_review($data);
+        }
+        else
+        {
+            $error = true;
+            $status = "Employee review data was missing.";
         }
         if (!empty($this->employees_model->error) || isset($status))
         {

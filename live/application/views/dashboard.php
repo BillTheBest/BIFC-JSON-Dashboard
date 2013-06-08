@@ -130,9 +130,11 @@
 				<article class="width_full">
 					<header><h5>User Details</h5></header>
 					<fieldset>
-						<label>Employee ID:</label>
-						<input type="text" name="employee_id" id="employee_id" />
-						<br clear="all" /><br />
+						<div id="employee_id_node" style="display: inline-block">
+							<label>Employee ID:</label>
+							<input type="text" name="employee_id" id="employee_id" />
+							<br clear="all" /><br />
+						</div>
 						<label>Name:</label>
 						<input type="text" name="name" id="name" />
 						<br clear="all" /><br />
@@ -241,9 +243,6 @@
 		// validate signup form on keyup and submit
 	var form_val = $("#user_form").validate({
 		rules: {
-			employee_id: {
-				number: true
-			},
 			name: {
 				required: true,
 				minlength: 2
@@ -259,9 +258,6 @@
 			}
 		},
 		messages: {
-			employee_id: {
-				number: "Enter a valid number"
-			},
 			name: {
 				required: "Please enter an employee name",
 				minlength: "Users name must be at least 2 characters"
@@ -314,7 +310,7 @@
 				clearModalForm();
 				btn_mode = "add";
 				form_val.resetForm( );
-				$("#employee_id").attr("disabled", false);
+				$("#employee_id_node").css("display", 'none');
 				$('#user_modal_head').html("Add New User");
 				$("#new_user_modal").modal('show');
 			}
@@ -334,7 +330,7 @@
                             $('#new_note').val("");
                             showMessage("success","Note added successfully.");
                         } else {
-                            showMessage("error","An error occurred adding the note."+data.status);
+                            showMessage("error","An error occurred adding the note. "+data.status);
                             $('#new_note').val("");
                         }
 					})
@@ -453,6 +449,7 @@
 			var e = getEmployeeData(this.id);
 			if (e != null) {
 				$("#employee_id").val(e.employee_id);
+				$("#employee_id_node").css("display", "block");
 				$("#employee_id").attr("disabled", true);
 				$("#name").val(e.name);
 				$("#location").val(e.location);
@@ -486,10 +483,14 @@
 		if (e != null) {
 			// AJAX
 			var error = true;
-			$.ajaxGET(user_url+"/delete/"+e.employee_id)
+			$.getJSON(users_url+"/delete/"+e.employee_id)
 				.done(function(data) { 
-					showMessage("success","Employee " + e.name + " was successfully deleted."); 
-					loadEmployees();
+					if (data.code == 200) {
+						showMessage("success","Employee " + e.name + " was successfully deleted."); 
+						loadEmployees();
+					} else {
+						showMessage("error","An error occurred deleting employee " + e.name + ". " + data.status);
+					}
 				})
 				.fail(function() { showMessage("error","An error occurred deleting employee " + e.name); });
 		} else {

@@ -8,7 +8,7 @@ class Messages_Model extends CI_Model {
 	public function find_by($field = false, $value = false) {
 		
 		if ($field === false || $value === false) { 
-			$error = "Missing parameters";
+			$this->error = "Missing parameters";
 			return false;
 		}
 		$message_list = array();

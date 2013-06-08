@@ -21,10 +21,10 @@ class Messages extends CI_Controller {
         }
         else
         {
-         $error = true;
+			$error = true;
             $status = "Required employee ID was missing.";
         }
-        if ($error)
+        if (!empty($this->messages_model->error) || isset($status))
         {
             $json_out['code'] = 301;
             $json_out['status'] = "error:".(!empty($this->messages_model->error) ? $this->messages_model->error : $status);
